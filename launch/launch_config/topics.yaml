@@ -21,4 +21,4 @@ services:
   modeclient: set_mode
   stream:  set_stream_rate
   rcservice:  buzzcmd
-  netstatus:  network_status
+  netstatus:  /xbee_status
