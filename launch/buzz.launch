@@ -1,0 +1,18 @@
+<?xml version="1.0"?>
+
+<launch>
+
+   <!-- launch rosbuzz  -->
+   <group ns="mavros">
+       <include file="$(find rosbuzz)/launch/rosbuzz.launch" >
+        	<arg name="name" value="robot99"/>
+        	<arg name="xbee_plugged" value="true"/>
+        	<arg name="script" value="buzz"/>
+        	<arg name="latitude" value="45.0"/>
+        	<arg name="longitude" value="73.0"/>
+       </include>
+    
+       <include file="$(find xbee_ros_node)/launch/xbeemav.launch" />
+    </group>
+
+</launch>
