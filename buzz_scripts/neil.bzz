@@ -1,7 +1,6 @@
 include "update.bzz"
 include "act/states.bzz"
 include "vstigenv.bzz"
-
 # State launched after takeoff
 AUTO_LAUNCH_STATE = "ACTION"
 
@@ -13,34 +12,80 @@ AUTO_LAUNCH_STATE = "ACTION"
 # 3 -> indoor wheeled vehicle
 V_TYPE = 0
 
+############################################################################
+# RaspBuzz Tutorial Begin ##################################################
+############################################################################
+raspbzz_cdr = { .1="Oh, son of a gun! We're going backwards. Oh, well.",
+		.2="All that - Where'd you ever hear that one, Buzz?", 
+		.3="No lie!" }
+raspbzz_cdr_first_dispatch = { .2=1, .3=1 }
+raspbzz_say = 1
+############################################################################
+# RaspBuzz Tutorial End ####################################################
+############################################################################
+
 # Executed once at init time.
 function init() {
 	init_swarm()
-
-	TARGET_ALTITUDE = 25.0 # m
-
+	TARGET_ALTITUDE = 0.0 # m
 	# start the swarm command listener
 	nei_cmd_listen()
-    
-    # Starting state: TURNEDOFF to wait for user input.
+	# Starting state: TURNEDOFF to wait for user input.
 	BVMSTATE = "TURNEDOFF"
 
-	v_sseac = stigmergy.create(514)
+	############################################################################
+	# RaspBuzz Tutorial Begin ##################################################
+	############################################################################
+	raspbzz_stig = stigmergy.create(1969)
+	iteration = 0
+
+	neighbors.listen("Buzz", 
+		function(vid, value, rid) {
+			if (value == 1)
+				raspbzz_say = 2
+				if (raspbzz_cdr_first_dispatch[raspbzz_say] == 1)
+					log(raspbzz_cdr[raspbzz_say])
+					raspbzz_cdr_first_dispatch[raspbzz_say] = 0
+			if (value == 2)
+				raspbzz_say = 3
+				if (raspbzz_cdr_first_dispatch[raspbzz_say] == 1)
+					log(raspbzz_cdr[raspbzz_say])
+					raspbzz_cdr_first_dispatch[raspbzz_say] = 0
+		}
+	)
+	############################################################################
+	# RaspBuzz Tutorial End ####################################################
+	############################################################################
+
 }
 
 function action() {
-    BVMSTATE = "ACTION"
-    # do some actions....
+	BVMSTATE = "ACTION"
 }
 
 # Executed at each time step.
 function step() {
-    # listen to Remote Controller
+
+	############################################################################
+	# RaspBuzz Tutorial Begin ##################################################
+	############################################################################
+	iteration = iteration + 1
+	raspbzz_stig.put("CDR", iteration)
+	if ((iteration%50)==0)
+		log("I'm on iteration", iteration, "Buzz is on iteration", raspbzz_stig.get("LMP"))
+
+	neighbors.broadcast("Neil", raspbzz_say)
+
+	if (raspbzz_say == 1)
+		log(raspbzz_cdr[raspbzz_say])
+	############################################################################
+	# RaspBuzz Tutorial End ####################################################
+	############################################################################
+
+	# listen to Remote Controller
 	rc_cmd_listen()
-    
-    #
+
 	# State machine
-	#
 	if(BVMSTATE=="TURNEDOFF")
 		statef=turnedoff
 	else if(BVMSTATE=="STOP")	# ends on turnedoff
@@ -53,31 +98,13 @@ function step() {
 		statef=action
 
 	statef()
-	log("Current state: ", BVMSTATE)
-	log("SSEAC RULEZ!!")
-	neighbors.listen("mtl", 
-		function(vid, value, rid) {
-			log(value)
-			log("from")
-			log(rid)
-		}
-	)
-	log("receiving")
 
-	v_ret = -1
-	v_ret = v_sseac.get("chi")
-	log(v_ret)
-
-	neighbors.foreach(
-		function(rid, data) {
-			log(rid)
-		})
 }
- 
+
 # Executed once when the robot (or the simulator) is reset.
 function reset() {
 }
- 
+
 # Executed once at the end of experiment.
 function destroy() {
 }
